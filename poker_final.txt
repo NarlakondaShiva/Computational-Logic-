@@ -1,0 +1,164 @@
+order(ace,king).
+order(king,queen).
+order(queen,jack).
+order(jack,10).
+order(10,9).
+order(9,8).
+order(8,7).
+order(7,6).
+order(6,5).
+order(5,4).
+order(4,3).
+order(3,2).
+
+order(straight_flush,four_of_a_kind).
+order(four_of_a_kind, full_house).
+order(full_house, straight).
+order(straight, flush).
+order(flush, three_of_a_kind).
+order(three_of_a_kind, two_pairs).
+order(two_pairs, one_pair).
+order(one_pair, no_pair).
+
+greater_value(X,Y):- order(X,Z), (Y=Z; greater_value(Z,Y)).
+
+better_poker_hand(Hand1, Hand2, Hand):-
+    sort_hand(Hand1, SH1),
+    sort_hand(Hand2, SH2),
+    determine_hand(SH1, R1),
+    determine_hand(SH2, R2),
+    result(R1, R2, R),
+    (R = R1, Hand = Hand1;
+    R = R2, Hand = Hand2;
+    R = tie, tiebreak(R1, SH1, SH2, W),
+        (W = left, Hand = Hand1;
+        W = right, Hand = Hand2)).
+
+tiebreak(straight_flush, Hand1, Hand2, Hand):- higher_card(Hand1, Hand2, Hand).
+tiebreak(four_of_a_kind, Hand1, Hand2, Hand):- higher_middle_card(Hand1, Hand2, Hand).
+tiebreak(full_house, Hand1, Hand2, Hand):- higher_middle_card(Hand1, Hand2, Hand).
+tiebreak(flush, Hand1, Hand2, Hand):- higher_card(Hand1, Hand2, Hand).
+tiebreak(straight, Hand1, Hand2, Hand):- higher_card(Hand1, Hand2, Hand).
+tiebreak(three_of_a_kind, Hand1, Hand2, Hand):- higher_middle_card(Hand1, Hand2, Hand).
+
+
+tiebreak(two_pairs, Hand1, Hand2, Hand):-
+    isolate_pairs(Hand1, [H1|_], [L1|_], [R1|_]),
+    isolate_pairs(Hand2, [H2|_], [L2|_], [R2|_]),
+    ((better_hand(H1, H2, Hand), Hand \=tie);
+    (better_hand(L1, L2, Hand), Hand \=tie);
+    (better_hand(R1, R2, Hand))).
+
+tiebreak(one_pair, Hand1, Hand2, Hand):-
+    isolate_pair(Hand1, [P1,_], [R1|_]),
+    isolate_pair(Hand2, [P2,_], [R2|_]),
+    ((better_hand(P1, P2, Hand), Hand \=tie);
+    (better_hand(R1, R2, Hand))).
+
+tiebreak(no_pair, Hand1, Hand2, Hand):- higher_card(Hand1, Hand2, Hand).
+    
+
+isolate_pairs(Hand ,HP, LP, L):-
+    Hand = [card(P,A),card(Q,B),card(R,C),card(S,D),card(T,E)],
+    (A = B, HP = [card(P,A),card(Q,B)],
+    (C = D, LP = [card(R,C),card(S,D)], L = [card(T,E)]);
+    (D = E, LP = [card(S,D),card(T,E)], L = [card(R,C)]));
+    (L = [card(P,A)], 
+     LP = [card(S,D),card(T,E)],
+     HP = [card(Q,B),card(R,C)]).
+
+isolate_pair(Hand, P1, R1):-
+    Hand = [card(P,A),card(Q,B),card(R,C),card(S,D),card(T,E)],
+    ((A = B, P1 = [card(P,A),card(Q,B)], R1 = [card(R,C),card(S,D),card(T,E)]);
+    (B = C, P1 = [card(Q,B),card(R,C)], R1 = [card(P,A),card(S,D),card(T,E)]);
+    (C = D, P1 = [card(R,C),card(S,D)], R1 = [card(P,A),card(Q,B),card(T,E)]);
+    (D = E, P1 = [card(S,D),card(T,E)], R1 = [card(P,A),card(Q,B),card(R,C)])).
+
+better_hand(H1, H2, Hand):-
+    H1 = card(_,A),
+    H2 = card(_,B),
+    result(A, B, Hand).    
+
+higher_card([card(_,H1)|_],[card(_,H2)|_], Hand):- 
+    result(H1, H2, H),
+    ( H = H1, Hand = left);
+    ( H = H2, Hand = right);
+    ( H = tie, Hand = tie).
+
+higher_middle_card([_,_,card(_,H1)|_], [_,_,card(_,H2)|_], Hand):-
+    result(H1, H2, H),
+    ( H = H1, Hand = left);
+    ( H = H2, Hand = right);
+    ( H = tie, Hand = tie).
+    
+
+result(A, A, tie).
+result(A, B, A):- greater_value(A,B).
+result(A, B, B):- greater_value(B,A).
+
+sort_hand([],[]).
+sort_hand([H|T], R):-
+    filter_by_high_card(H, T, First, Second),
+    sort_hand(First, SortedFirst),
+    sort_hand(Second, SortedSecond),
+    append(SortedFirst,[H|SortedSecond],R).
+
+greaterCard(card(_,A),card(_,A),tie).
+greaterCard(card(X,A),card(_,B),card(X,A)):-greater_value(A,B).
+greaterCard(card(_,A),card(Y,B),card(Y,B)):-greater_value(B,A).
+
+filter_by_high_card(_,[],[],[]).
+filter_by_high_card(P, [card(_,H)|T],LowCards, [card(_,H)|HighCards]):-
+                    greaterCard(P, card(_,H), Z),
+                    (Z = P; Z = tie),
+                    filter_by_high_card(P, T, LowCards, HighCards).
+                    
+filter_by_high_card(P,[card(_,H)|T], [card(_,H)|LowCards], HighCards):-
+                    greaterCard(P,card(_,H),card(_,H)),
+                    filter_by_high_card(P, T, LowCards, HighCards).
+
+
+has_flush([card(X,_),card(X,_),card(X,_),card(X,_),card(X,_)]).
+has_straight([card(_,A),card(_,B),card(_,C),card(_,D),card(_,E)]):-
+    order(A,B), order(B,C), order(C,D), order(D,E).
+has_straight_flush(Hand):- has_straight(Hand), 
+    						has_flush(Hand).
+
+four_of_a_kind([card(_,X),card(_,A), card(_,A), card(_,A),card(_,Y)]):- 
+ 							X = A; Y = A.
+
+has_full_house([card(_,A),card(_,B), card(_,C), card(_,D), card(_,E)]):-
+    	(A = B, C = D, C = E); ( A = B, A = C, D = E).
+
+three_of_a_kind([card(_,A),card(_,B), card(_,C), card(_,D), card(_,E)]):-
+    	(A=B,A=C);(B=C,B=D);(C=D,C=E).
+
+two_pairs([card(_,A),card(_,A),card(_,B),card(_,B), card(_,_)]).
+two_pairs([card(_,_),card(_,A),card(_,A),card(_,B), card(_,B)]).
+two_pairs([card(_,A),card(_,A),card(_,_),card(_,B), card(_,B)]).
+
+one_pair([card(_,A),card(_,B), card(_,C), card(_,D), card(_,E)]):-
+    A = B; B=C, C=D, D=E.
+
+no_pair(_).
+
+determine_hand(Hand, straight_flush):- has_straight_flush(Hand).
+
+determine_hand(Hand, four_of_a_kind):- four_of_a_kind(Hand).
+           
+determine_hand(Hand, full_house):- has_full_house(Hand).
+               
+determine_hand(Hand, straight):- has_straight(Hand).
+               
+determine_hand(Hand, flush):- has_flush(Hand).
+    
+determine_hand(Hand, three_of_a_kind):- three_of_a_kind(Hand).
+               
+determine_hand(Hand, two_pairs):- two_pairs(Hand).
+    
+determine_hand(Hand, one_pair):- one_pair(Hand).
+               
+determine_hand(Hand, no_pair):- no_pair(Hand).
+               
+                  
+    

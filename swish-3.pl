@@ -6,28 +6,47 @@
 :- use_module(library(when)).	% Coroutining
 %:- use_module(library(clpq)).  % Constraints over rational numbers
 
-% Constraint Logic Programming
-:- use_module(library(clpfd)).	% Finite domain constraints
+:- use_module(library(clpfd)).
 
 
-graphcoloring(Nodes,Edges,Finaloutput):-assigningcolortonode(Nodes, Colors, Output),
-    Colors ins 1..4, 
-    differentcolor(Edges, Output),
-    changeColor(Output, Finaloutput),
-    labeling([ff], Colors).
+solve(Nationalities,Colors, Beverages,Profession,Pets):-
+    Nationalities = [English,Spaniard,Italy,Japanese,Norwegian],
+    Colors = [Red,Green,Yellow,Blue,White],
+    Beverages = [_Tea,Coffee,Milk,OrangeJuice,_Water],
+    Profession = [Painter,Diplomat,Violinist,Doctor,Sculptor],
+    Pets = [Dog,Snails,Fox,Horse,_Zebra],
 
-%each and every color is assigned to every node in Nodes and put in to output list.
-assigningcolortonode([],[],[]).
-assigningcolortonode([N|Nodes], [C|Colors], [(N,C)|Output]) :-
-assigningcolortonode(Nodes, Colors, Output).
-%changecolour predicate will assign color to each interger in the domain.
-changeColor([],[]).
-changeColor([(M,N)|Output],[(M,yellow)|Finaloutput]):-(1 #= N), changeColor(Output,Finaloutput).
-changeColor([(M,N)|Output],[(M,blue)|Finaloutput]):-(2 #= N), changeColor(Output,Finaloutput).
-changeColor([(M,N)|Output],[(M,green)|Finaloutput]):-(3 #= N), changeColor(Output,Finaloutput).
-changeColor([(M,N)|Output],[(M,red)|Finaloutput]):-(4 #= N), changeColor(Output,Finaloutput).
-%no two nodes with same edge will not have same color .
-differentcolor([],_).
-differentcolor([[A,B]|P], Output) :- member((A,CA), Output),member((B,CB), Output),CA #\= CB,
-differentcolor(P, Output).
+    all_different(Nationalities),
+    all_different(Colors),
+    all_different(Beverages),
+    all_different(Profession),
+    all_different(Pets),
 
+    Nationalities ins 1..5,
+    Colors ins 1..5,
+    Beverages ins 1..5,
+    Profession ins 1..5,
+    Pets ins 1..5,
+    English#=Red,
+    Spaniard#=Dog,
+    Japanese#=Painter,
+    Coffee#=Italy,
+    Norwegian#=1,
+    Green#=Coffee,
+    Green#=White+1,
+    Sculptor#=Snails,
+    Diplomat#=Yellow,
+    Milk#=3,
+    Norwegian#=Blue+1,
+    Violinist#=OrangeJuice,    
+    Fox#=Doctor+1,
+    Horse#=Diplomat+1,  
+    Labeling([ffc], Nationalities ),
+    Labeling([ffc],Colors),
+    Labeling([ffc],Beverages),
+    Labeling([ffc],Profession),
+    Labeling([ffc],Pets).
+    
+   
+
+   

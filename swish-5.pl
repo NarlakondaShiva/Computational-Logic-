@@ -1,6 +1,6 @@
 % Constraint Logic Programming
-:- use_module(library(dif)).	% Sound inequality
-:- use_module(library(clpfd)).	% Finite domain constraints
+:- use_module(library(dif)).	
+:- use_module(library(clpfd)).	
 :- use_module(library(clpb)).	% Boolean constraints
 :- use_module(library(chr)).	% Constraint Handling Rules
 :- use_module(library(when)).	% Coroutining
@@ -13,7 +13,12 @@ Dog,Snails,Fox,Horse,Zebra,
 Tea,Coffee,Milk,OrangeJuice,Water,
 Kools,Chesterfields,Parliaments,LuckyStrike,OldGold],
 Vars ins 1..5,
-
+all_different([English,Spaniard,Ukrainian,Japanese,Norwegian]),
+all_different([Red,Green,Yellow,Blue,Ivory]),
+all_different([Coffee,Water,Milk,OrangeJuice,Tea]),
+all_different([Dog,Fox,Horse,Snails,Zebra]),
+all_different([Chesterfields,LuckyStrike,Parliaments,Kools,OldGold]),
+label(Vars).
 English#=Red,
 Spaniard#=Dog,
 Coffee#=Green,
@@ -28,9 +33,3 @@ Kools#=Horse+1#\/Kools#=Horse-1,
 LuckyStrike#=OrangeJuice,
 Japanese#=Parliaments,
 Norwegian#=Blue+1#\/NO#=Blue-1,
-all_different([English,Spaniard,Ukrainian,Japanese,Norwegian]),
-all_different([Red,Green,Yellow,Blue,Ivory]),
-all_different([Coffee,Water,Milk,OrangeJuice,Tea]),
-all_different([Dog,Fox,Horse,Snails,Zebra]),
-all_different([Chesterfields,LuckyStrike,Parliaments,Kools,OldGold]),
-label(Vars).
